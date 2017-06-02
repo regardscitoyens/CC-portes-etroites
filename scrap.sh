@@ -54,7 +54,9 @@ curl -sL "$YEARS_URL"                                           |
         )
         ddat=$(datize "$ddat")
         dnum=$(echo $decision                       |
-          sed -r "s|^.*Décision n°\s*(\S+) .*$|\1|" |
+          sed -r "s|^.*Décision n°\s*(\S+) .*$|\1|"
+        )
+        did=$(echo $dnum |
           sed "s|/|_|g"
         )
         dtyp=$(echo $decision |
@@ -85,9 +87,9 @@ curl -sL "$YEARS_URL"                                           |
           pdf_url=$(curl -sL "$ROOT_URL$contribs_url" |
             grep ";URL="                              |
             sed -r "s|^.*;URL=(.+?)['\"].*$|\1|")
-          if ! test -s "documents/$dnum.pdf"; then
-            curl -sL "$ROOT_URL$pdf_url" > "documents/$dnum.pdf"
-            pdftotext "documents/$dnum.pdf"
+          if ! test -s "documents/$did.pdf"; then
+            curl -sL "$ROOT_URL$pdf_url" > "documents/$did.pdf"
+            pdftotext "documents/$did.pdf"
             echo "Nouvelle décision du CC avec liste de portes étroites :"
             echo " -> $dnum $dtyp ($ddat) $dtit ($ddec)"
             echo "    $ROOT_URL$pdf_url"
