@@ -5,9 +5,14 @@ mkdir -p data documents
 ROOT_URL="http://www.conseil-constitutionnel.fr"
 DECISFILE="data/decisions.csv"
 CONTRFILE="data/contributions.csv"
+CONTRIBS=true
+
+if [ ! -z "$1" ]; then
+  DECISFILE="data/decisions-1958-2016.csv"
+  CONTRIBS=false
+fi
 
 # TODO
-# - collect all decisions
 # - updater auto
 
 function datize {
@@ -18,14 +23,17 @@ function datize {
     sed "s/avr/apr/i"           |
     sed "s/mai/may/i"           |
     sed "s/jui/jul/i"           |
-    sed "s/ao[uû]/aug/i"
+    sed "s/ao[uû]/aug/i"        |
+    sed "s/déc/dec/i"
   )
   echo $(date -d "$dat" +'%Y-%m-%d')
 }
 
 HEADERS="date,numero,type,titre,décision,url"
 echo "$HEADERS" > $DECISFILE
-echo "$HEADERS,auteurs_contribution,source" > $CONTRFILE
+if $CONTRIBS; then
+  echo "$HEADERS,auteurs_contribution,source" > $CONTRFILE
+fi
 
 YEARS_URL="$ROOT_URL/conseil-constitutionnel/francais/les-decisions/acces-par-date/decisions-depuis-1959/les-decisions-par-date.4614.html"
 curl -sL "$YEARS_URL"                                           |
@@ -37,14 +45,22 @@ curl -sL "$YEARS_URL"                                           |
     year=$(echo $line |
       sed -r "s|^.*>([0-9]{4})</a>.*$|\1|"
     )
-    if [ "$year" -lt 2017 ]; then
+    if $CONTRIBS && [ "$year" -lt 2017 ]; then
       break
+    elif ! $CONTRIBS; then
+      if [ "$year" -ge 2017 ]; then
+        continue
+      fi
+      echo $year
     fi
-    curl -sL "$ROOT_URL$yurl"   |
-      tr "\n" " "               |
-      sed -r "s|(</?li)|\n\1|g" |
-      grep "^<li value="        |
-      sed -r "s|\s+| |g"        |
+    curl -sL "$ROOT_URL$yurl"                                                       |
+      tr "\n" " "                                                                   |
+      sed -r "s|(</?li)|\n\1|g"                                                     |
+      grep "^<li value="                                                            |
+      sed -r "s|\s+| |g"                                                            |
+      sed -r "s|([0-9]{2,4}-[0-9/]+) ([A-Z0-9]+) ([A-Z]+)|\1_\2 \3|g"               |
+      sed -r "s|([0-9]{2,4}-[0-9/]+) à ([0-9]{2,4}-)?([0-9/]+)|\1-\3|g"             |
+      sed -r "s|([0-9]{2,4}-[0-9/]+) ([A-Z]+) et ([0-9]{2,4}-[0-9/]+) \2|\1+\3 \2|g"|
       while read decision; do
         durl=$(echo $decision |
           sed -r "s|^.* href=\s*'([^']+)'\s*>.*$|\1|"
@@ -60,7 +76,7 @@ curl -sL "$YEARS_URL"                                           |
           sed "s|/|_|g"
         )
         dtyp=$(echo $decision |
-          sed -r "s|^.*n°\s*\S+\s+([A-Z]+)\s*</a>.*$|\1|"
+          sed -r "s|^.*n°\s*\S+\s+(et autres\s+)?([A-Z]+[0-9]*)\s*</a>.*$|\2|"
         )
         dtit=$(echo $decision                       |
           sed -r "s|^.*<em>(.+?)\s*<br\s*/>.*$|\1|" |
@@ -76,6 +92,9 @@ curl -sL "$YEARS_URL"                                           |
         fi
         contrib_metas="$ddat,$dnum,$dtyp,\"$dtit\",$ddec,$ROOT_URL$durl"
         echo "$contrib_metas" >> $DECISFILE
+        if ! $CONTRIBS; then
+          continue
+        fi
         contribs_url=$(curl -sL "$ROOT_URL$durl"                    |
           tr "\n" " "                                               |
           sed -r "s|(</?a)|\n\1|g"                                  |
@@ -109,3 +128,8 @@ curl -sL "$YEARS_URL"                                           |
         fi
       done
   done
+
+if $CONTRIBS && test -s data/decisions-1958-2016.csv; then
+  cat data/decisions-1958-2016.csv |
+    grep -v "^date," >> $DECISFILE
+fi
