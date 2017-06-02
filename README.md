@@ -16,7 +16,11 @@ Les données sont redistribuées en OpenData sous ([licence ODBL](http://www.vvl
 
 ## Développement
 
-- Dépend de `pdftotext` présent sur la plupart des distributions Linux.
+- Dépend de `pdftotext` présent sur la plupart des distributions Linux via le paquet `poppler-utils`.
+
+```bash
+sudo apt-get install poppler-utils
+```
 
 - Générer les métadonnées historiques des décisions entre 1958 et 2016 :
 
