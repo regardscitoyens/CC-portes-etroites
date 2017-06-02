@@ -7,9 +7,21 @@ DECISFILE="data/decisions.csv"
 CONTRFILE="data/contributions.csv"
 
 # TODO
-# - dates ISO
 # - collect all decisions
 # - updater auto
+
+function datize {
+  dat=$(echo $1                 |
+    sed "s/juin/jun/i"          |
+    sed -r "s/ (...)\S* /-\1-/" |
+    sed "s/f[eé]v/feb/i"        |
+    sed "s/avr/apr/i"           |
+    sed "s/mai/may/i"           |
+    sed "s/jui/jul/i"           |
+    sed "s/ao[uû]/aug/i"
+  )
+  echo $(date -d "$dat" +'%Y-%m-%d')
+}
 
 HEADERS="date,numero,type,titre,décision,url"
 echo "$HEADERS" > $DECISFILE
@@ -40,6 +52,7 @@ curl -sL "$YEARS_URL"                                           |
         ddat=$(echo $decision |
           sed -r "s|^.*'>(.+? [0-9]{4}) - Décision n°.*$|\1|"
         )
+        ddat=$(datize "$ddat")
         dnum=$(echo $decision                       |
           sed -r "s|^.*Décision n°\s*(\S+) .*$|\1|" |
           sed "s|/|_|g"
