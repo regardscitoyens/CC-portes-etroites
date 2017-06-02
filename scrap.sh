@@ -12,9 +12,6 @@ if [ ! -z "$1" ]; then
   CONTRIBS=false
 fi
 
-# TODO
-# - updater auto
-
 function datize {
   dat=$(echo $1                 |
     sed "s/juin/jun/i"          |

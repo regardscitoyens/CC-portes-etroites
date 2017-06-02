@@ -30,4 +30,15 @@ Les données sont redistribuées en OpenData sous ([licence ODBL](http://www.vvl
 ./scrap.sh
 ```
 
+- Mettre à jour automatiquement les données dans le repo git :
 
+```bash
+./update.sh
+```
+
+Ou dans un cronjob :
+
+```crontab
+m  h  dom mon dow   command
+05 1   *   *   *    $PATH_TO_THIS_REPO/update.sh 2>&1
+```
