@@ -26,6 +26,24 @@ function datize {
   echo $(date -d "$dat" +'%Y-%m-%d')
 }
 
+function safecurl {
+  url=$1
+  retries=$2
+  if [ -z "$retries" ]; then
+    retries=10
+  fi
+  curl -sL --connect-timeout 5 "$url" > /tmp/safecurl-portes-etroites.tmp
+  if grep '<html' /tmp/safecurl-portes-etroites.tmp; then
+    cat /tmp/safecurl-portes-etroites.tmp
+  elif [ "$retries" -gt 0 ]; then
+    sleep 3
+    safecurl "$url" $(( $retries - 1 ))
+  else
+    echo "Impossible to download $url, stopping now"
+    exit 1
+  fi
+}
+
 HEADERS="date,numero,type,titre,décision,url"
 echo "$HEADERS" > $DECISFILE
 if $CONTRIBS; then
@@ -33,7 +51,7 @@ if $CONTRIBS; then
 fi
 
 YEARS_URL="$ROOT_URL/conseil-constitutionnel/francais/les-decisions/acces-par-date/decisions-depuis-1959/les-decisions-par-date.4614.html"
-curl -sL "$YEARS_URL"                                           |
+safecurl "$YEARS_URL"                                           |
   grep "acces-par-date/decisions-depuis-1959.*'>[0-9]\{4\}</a>" |
   while read line; do
     yurl=$(echo $line |
@@ -50,7 +68,7 @@ curl -sL "$YEARS_URL"                                           |
       fi
       echo $year
     fi
-    curl -sL "$ROOT_URL$yurl"                                                       |
+    safecurl "$ROOT_URL$yurl"                                                       |
       tr "\n" " "                                                                   |
       sed -r "s|(</?li)|\n\1|g"                                                     |
       grep "^<li value="                                                            |
@@ -92,7 +110,7 @@ curl -sL "$YEARS_URL"                                           |
         if ! $CONTRIBS; then
           continue
         fi
-        contribs_url=$(curl -sL "$ROOT_URL$durl"                    |
+        contribs_url=$(safecurl "$ROOT_URL$durl"                    |
           tr "\n" " "                                               |
           sed -r "s|(</?a)|\n\1|g"                                  |
           grep "Liste des contributions\|contributions extérieures" |
@@ -100,7 +118,7 @@ curl -sL "$YEARS_URL"                                           |
           sed -r "s|^.* href=\s*'([^']+)'\s*>.*$|\1|"
         )
         if [ ! -z "$contribs_url" ]; then
-          pdf_url=$(curl -sL "$ROOT_URL$contribs_url" |
+          pdf_url=$(safecurl "$ROOT_URL$contribs_url" |
             grep ";URL="                              |
             sed -r "s|^.*;URL=(.+?)['\"].*$|\1|")
           if ! test -s "documents/$did.pdf"; then
