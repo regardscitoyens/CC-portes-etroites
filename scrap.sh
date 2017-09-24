@@ -121,14 +121,14 @@ safecurl "$YEARS_URL"                                           |
           pdf_url=$(safecurl "$ROOT_URL$contribs_url" |
             grep ";URL="                              |
             sed -r "s|^.*;URL=(.+?)['\"].*$|\1|")
-          if ! test -s "documents/$did.pdf"; then
+          if ! test -s "documents/$did.txt"; then
             curl -sL "$ROOT_URL$pdf_url" > "documents/$did.pdf"
             pdftotext "documents/$did.pdf"
             echo "Nouvelle décision du CC avec liste de portes étroites :"
             echo " -> $dnum $dtyp ($ddat) $dtit ($ddec)"
             echo "    $ROOT_URL$pdf_url"
           fi
-          cat "documents/$dnum.txt"                 |
+          cat "documents/$did.txt"                  |
             tr "\n" "|"                             |
             sed -r "s/^.*Contributions[^\|]*?\|+//" |
             sed -r "s/+/\n/g"                      |
