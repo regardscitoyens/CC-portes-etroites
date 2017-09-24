@@ -148,3 +148,5 @@ if $CONTRIBS && test -s data/decisions-1958-2016.csv; then
   cat data/decisions-1958-2016.csv |
     grep -v "^date," >> $DECISFILE
 fi
+uniq $DECISFILE > $DECISFILE.tmp
+mv -f $DECISFILE{.tmp,}
