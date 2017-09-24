@@ -91,7 +91,7 @@ safecurl "$YEARS_URL"                                           |
           sed "s|/|_|g"
         )
         dtyp=$(echo $decision |
-          sed -r "s|^.*n°\s*\S+\s+(et autres\s+)?([A-Z]+[0-9]*)\s*</a>.*$|\2|"
+          sed -r "s|^.*n°\s*\S+\s+(et autres\s+)?([A-Z]+[0-9A-Z/ ]*)\s*</a>.*$|\2|"
         )
         dtit=$(echo $decision                       |
           sed -r "s|^.*<em>(.+?)\s*<br\s*/>.*$|\1|" |
