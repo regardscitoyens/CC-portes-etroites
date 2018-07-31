@@ -44,6 +44,9 @@ function safecurl {
   fi
 }
 
+echo "OBSOLETE BY NEW CC WEBSITE. To Be Fixed..."
+exit
+
 HEADERS="date,numero,type,titre,décision,url"
 echo "$HEADERS" > $DECISFILE
 if $CONTRIBS; then
